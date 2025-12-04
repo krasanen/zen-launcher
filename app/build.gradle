@@ -155,6 +155,11 @@ configurations {
         exclude module: 'httpclient'
     }
 }
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(17)
+    }
+}
 
 // --- Value Source Classes for Configuration Cache Compatibility ---
 
