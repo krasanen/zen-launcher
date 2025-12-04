@@ -1,6 +1,7 @@
 package fr.neamar.kiss.forwarder;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Point;
 import android.os.Build;
@@ -512,6 +513,11 @@ public class ExperienceTweaks extends Forwarder {
                 break;
             case "lock-screen":
                 mainActivity.lockScreen();
+                break;
+            case "turn-off-screen":
+                Intent intentScreenOff = new Intent(mainActivity, fi.zmengames.zen.LauncherService.class);
+                intentScreenOff.setAction(ZEvent.State.SCREEN_OFF.toString());
+                mainActivity.startService(intentScreenOff);
                 break;
             case "display-history":
                 // if minimalistic mode is enabled,

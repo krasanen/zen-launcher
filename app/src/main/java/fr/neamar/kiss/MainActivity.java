@@ -983,9 +983,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
         if (BuildConfig.DEBUG) Log.d(TAG,"onStart");
         EventBus.getDefault().register(this);
         forwarderManager.onStart();
-
-        Intent intent = new Intent(this, LauncherService.class);
-        bindService(intent, mServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
@@ -997,10 +994,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
             camera.release();
         }
         forwarderManager.onStop();
-        if (mServiceBound) {
-            unbindService(mServiceConnection);
-            mServiceBound = false;
-        }
     }
 
 
@@ -2725,21 +2718,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
     public void onWallpaperScroll(float fCurrent) {
         forwarderManager.onWallpaperScroll(fCurrent);
     }
-
-    boolean mServiceBound = false;
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mServiceBound = false;
-        }
-
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-
-            mServiceBound = true;
-        }
-    };
 
     public void onClick(View view) {
         if (BuildConfig.DEBUG) Log.i(TAG, "onClick:" + view.getTag());

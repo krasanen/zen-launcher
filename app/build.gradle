@@ -1,3 +1,9 @@
+import org.gradle.api.provider.ValueSource
+import org.gradle.api.provider.ValueSourceParameters
+import org.gradle.process.ExecOperations
+import javax.inject.Inject
+import java.text.SimpleDateFormat
+
 buildscript {
     repositories {
         maven {
@@ -16,20 +22,31 @@ plugins {
 }
 
 android {
+    namespace 'fr.neamar.kiss'
     lintOptions {
         checkReleaseBuilds true
-        // Or, if you prefer, you can continue to check for errors in release builds,
-        // but continue the build even when errors are found:
         abortOnError false
     }
 
     compileSdkVersion 34
+
+    buildFeatures {
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId 'com.zmengames.zenlauncher'
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 34
-        versionName = buildTimeStamp() + "@" + gitLastCommit()
-        versionCode = gitVersion()
+        multiDexEnabled true
+
+        // FIXED: Use Providers to get values safely for Configuration Cache
+        def versionDate = providers.of(BuildTimeValueSource) {}.get()
+        def versionHash = providers.of(GitHashValueSource) {}.get()
+        versionName = "${versionDate}@${versionHash}"
+
+        versionCode = providers.of(GitVersionValueSource) {}.get()
+
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         signingConfigs {
             debug {
@@ -78,24 +95,22 @@ android {
             shrinkResources true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.release
-            signingConfig signingConfigs.debug
             resValue "string", "app_version", "${defaultConfig.versionName}.${defaultConfig.versionCode}"
         }
         debug {
             applicationIdSuffix '.debug'
             versionNameSuffix "-debug"
-            minifyEnabled true
-            shrinkResources true
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.release
             signingConfig signingConfigs.debug
             resValue "string", "app_version", "${defaultConfig.versionName}${versionNameSuffix}.${defaultConfig.versionCode}"
 
         }
-        sourceSets {
-            main {
-                jniLibs.srcDirs = ['libs']
-            }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
         }
     }
     compileOptions {
@@ -111,6 +126,7 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
     androidTestImplementation 'androidx.test:rules:1.3.0'
     implementation 'androidx.annotation:annotation:1.1.0'
+    implementation 'androidx.multidex:multidex:2.0.1'
 
     implementation 'com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava'
     implementation 'com.google.android.gms:play-services-auth:21.1.0'
@@ -134,24 +150,57 @@ tasks.withType(JavaCompile) {
 
 }
 
-def gitVersion() {
-    def process = "git rev-list HEAD --first-parent --count".execute()
-    return process.text.toInteger() + 10
-}
-
-def gitLastCommit() {
-    def process = "git rev-parse --short HEAD".execute()
-    return process.text.trim()
-}
-
-def buildTimeStamp() {
-    def date = new Date()
-    def formattedDate = date.format('yyyy-MM-dd')
-    return formattedDate
-}
-
 configurations {
     all {
         exclude module: 'httpclient'
+    }
+}
+
+// --- Value Source Classes for Configuration Cache Compatibility ---
+
+abstract class GitVersionValueSource implements ValueSource<Integer, ValueSourceParameters.None> {
+    @Inject
+    abstract ExecOperations getExecOperations()
+
+    @Override
+    Integer obtain() {
+        try {
+            def stdout = new ByteArrayOutputStream()
+            execOperations.exec {
+                commandLine 'git', 'rev-list', 'HEAD', '--first-parent', '--count'
+                standardOutput = stdout
+            }
+            return Integer.parseInt(stdout.toString().trim()) + 10
+        } catch (Exception e) {
+            return 1
+        }
+    }
+}
+
+abstract class GitHashValueSource implements ValueSource<String, ValueSourceParameters.None> {
+    @Inject
+    abstract ExecOperations getExecOperations()
+
+    @Override
+    String obtain() {
+        try {
+            def stdout = new ByteArrayOutputStream()
+            execOperations.exec {
+                commandLine 'git', 'rev-parse', '--short', 'HEAD'
+                standardOutput = stdout
+            }
+            return stdout.toString().trim()
+        } catch (Exception e) {
+            return "unknown"
+        }
+    }
+}
+
+abstract class BuildTimeValueSource implements ValueSource<String, ValueSourceParameters.None> {
+    @Override
+    String obtain() {
+        def date = new Date()
+        def formattedDate = new SimpleDateFormat('yyyy-MM-dd').format(date)
+        return formattedDate
     }
 }
