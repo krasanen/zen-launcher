@@ -25,6 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.regex.Pattern;
 
+import fi.zmengames.zen.AccessibilityDisclosureHelper;
 import fi.zmengames.zen.ZEvent;
 import fr.neamar.kiss.BuildConfig;
 import fr.neamar.kiss.MainActivity;
@@ -515,9 +516,15 @@ public class ExperienceTweaks extends Forwarder {
                 mainActivity.lockScreen();
                 break;
             case "turn-off-screen":
-                Intent intentScreenOff = new Intent(mainActivity, fi.zmengames.zen.LauncherService.class);
-                intentScreenOff.setAction(ZEvent.State.SCREEN_OFF.toString());
-                mainActivity.startService(intentScreenOff);
+                // Check if accessibility service is enabled, show disclosure if needed
+                if (AccessibilityDisclosureHelper.isAccessibilityServiceEnabled(mainActivity)) {
+                    Intent intentScreenOff = new Intent(mainActivity, fi.zmengames.zen.LauncherService.class);
+                    intentScreenOff.setAction(ZEvent.State.SCREEN_OFF.toString());
+                    mainActivity.startService(intentScreenOff);
+                } else {
+                    // Show prominent disclosure and request permission
+                    AccessibilityDisclosureHelper.requestAccessibilityPermission(mainActivity, null);
+                }
                 break;
             case "display-history":
                 // if minimalistic mode is enabled,

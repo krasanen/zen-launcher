@@ -28,7 +28,7 @@ android {
         abortOnError false
     }
 
-    compileSdkVersion 34
+    compileSdkVersion 36
 
     buildFeatures {
         buildConfig true
@@ -37,7 +37,7 @@ android {
     defaultConfig {
         applicationId 'com.zmengames.zenlauncher'
         minSdkVersion 21
-        targetSdkVersion 34
+        targetSdkVersion 36
         multiDexEnabled true
 
         // FIXED: Use Providers to get values safely for Configuration Cache
@@ -57,7 +57,7 @@ android {
             }
         }
         Properties props = new Properties()
-        def propFile = file('../signing.properties')
+        def propFile = file('/home/kari/AndroidStudioProjects/signing.properties')
         if (propFile.canRead()){
             props.load(new FileInputStream(propFile))
 
@@ -172,11 +172,13 @@ abstract class GitVersionValueSource implements ValueSource<Integer, ValueSource
         try {
             def stdout = new ByteArrayOutputStream()
             execOperations.exec {
-                commandLine 'git', 'rev-list', 'HEAD', '--first-parent', '--count'
-                standardOutput = stdout
+                it.workingDir = new File(System.getProperty('user.dir'))
+                it.commandLine 'git', 'rev-list', 'HEAD', '--first-parent', '--count'
+                it.standardOutput = stdout
             }
             return Integer.parseInt(stdout.toString().trim()) + 10
         } catch (Exception e) {
+            println "GitVersionValueSource error: ${e.class.name}: ${e.message}"
             return 1
         }
     }
@@ -191,11 +193,13 @@ abstract class GitHashValueSource implements ValueSource<String, ValueSourcePara
         try {
             def stdout = new ByteArrayOutputStream()
             execOperations.exec {
-                commandLine 'git', 'rev-parse', '--short', 'HEAD'
-                standardOutput = stdout
+                it.workingDir = new File(System.getProperty('user.dir'))
+                it.commandLine 'git', 'rev-parse', '--short', 'HEAD'
+                it.standardOutput = stdout
             }
             return stdout.toString().trim()
         } catch (Exception e) {
+            println "GitHashValueSource error: ${e.class.name}: ${e.message}"
             return "unknown"
         }
     }

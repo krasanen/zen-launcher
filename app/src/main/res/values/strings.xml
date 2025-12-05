@@ -446,6 +446,13 @@
     <string name="height">Height</string>
     <string name="alarm_received">Zen Alarm received!</string>
     <string name="ui_item_contact_email">Send Email</string>
-    />
+
+    <!-- Accessibility Service Disclosure -->
+    <string name="accessibility_disclosure_title">Accessibility Service Required</string>
+    <string name="accessibility_disclosure_message">Zen Launcher uses the Android Accessibility Service solely to provide the "Turn Off Screen" feature. This allows you to lock your device screen with a gesture or tap, without requiring a physical button press.\n\nThe Accessibility Service is used ONLY for:\n• Locking the screen when you use the "Turn Off Screen" gesture\n\nZen Launcher does NOT:\n• Collect, store, or share any personal data\n• Monitor or record your screen content\n• Access your passwords or sensitive information\n• Track your app usage or browsing activity\n\nYou can disable this permission at any time in your device\'s Accessibility Settings.</string>
+    <string name="accessibility_disclosure_accept">Enable Feature</string>
+    <string name="accessibility_disclosure_decline">Not Now</string>
+    <string name="accessibility_service_description">Zen Launcher uses accessibility service only for the "Turn Off Screen" feature to lock your device screen with a gesture. No data is collected.</string>
+    <string name="accessibility_disclosure_consent_key" translatable="false">accessibility_disclosure_accepted</string>
 
 </resources>

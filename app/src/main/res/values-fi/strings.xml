@@ -407,4 +407,11 @@
     <string name="height">Korkeus</string>
     <string name="alarm_received">Zen Herätys!</string>
     <string name="ui_item_contact_email">Lähetä sähköpostia</string>
+
+    <!-- Accessibility Service Disclosure -->
+    <string name="accessibility_disclosure_title">Esteettömyyspalvelu vaaditaan</string>
+    <string name="accessibility_disclosure_message">Zen Launcher käyttää Androidin esteettömyyspalvelua ainoastaan \"Sammuta näyttö\" -ominaisuuden tarjoamiseen. Tämä mahdollistaa laitteen näytön lukitsemisen eleellä tai napautuksella ilman fyysisen painikkeen painamista.\n\nEsteettömyyspalvelua käytetään AINOASTAAN:\n• Näytön lukitsemiseen kun käytät \"Sammuta näyttö\" -elettä\n\nZen Launcher EI:\n• Kerää, tallenna tai jaa henkilökohtaisia tietoja\n• Seuraa tai tallenna näytön sisältöä\n• Käytä salasanojasi tai arkaluonteisia tietojasi\n• Seuraa sovellustesi käyttöä tai selaushistoriaasi\n\nVoit poistaa tämän luvan käytöstä milloin tahansa laitteesi esteettömyysasetuksista.</string>
+    <string name="accessibility_disclosure_accept">Ota käyttöön</string>
+    <string name="accessibility_disclosure_decline">Ei nyt</string>
+    <string name="accessibility_service_description">Zen Launcher käyttää esteettömyyspalvelua ainoastaan \"Sammuta näyttö\" -ominaisuuteen laitteen näytön lukitsemiseksi eleellä. Tietoja ei kerätä.</string>
 </resources>
