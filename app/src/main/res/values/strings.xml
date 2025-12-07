@@ -376,6 +376,8 @@
     <string name="ui_item_contact_hint_call_cell">Cellular call</string>
     <string name="menu_widget_resize">Resize Widget</string>
     <string name="resize_widget_hint">Drag corners to resize, center to move</string>
+    <string name="widget_picker_search_hint">Search widgets…</string>
+    <string name="widget_picker_title">Select Widget</string>
     <string name="menu_widget_configure">Configure Widget</string>
     <string name="flashlight_on">Flashlight On</string>
     <string name="flashlight_off">Flashlight Off</string>

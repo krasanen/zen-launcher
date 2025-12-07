@@ -172,6 +172,11 @@
         </activity>
         <activity android:name="fi.zmengames.zen.AppGridActivity" />
 
+        <activity
+            android:name=".WidgetPickerActivity"
+            android:theme="@style/AppThemeTransparent"
+            android:exported="false" />
+
         <receiver
             android:name=".broadcast.LocaleChangedReceiver"
             android:enabled="true"

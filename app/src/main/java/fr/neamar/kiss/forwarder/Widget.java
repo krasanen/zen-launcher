@@ -40,6 +40,7 @@ import fr.neamar.kiss.ui.WidgetLayout;
 import fr.neamar.kiss.ui.WidgetMenu;
 import fr.neamar.kiss.ui.WidgetPreferences;
 import fr.neamar.kiss.ui.WidgetResizeFrame;
+import fr.neamar.kiss.WidgetPickerActivity;
 
 import static android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_OPTIONS;
 import static fr.neamar.kiss.MainActivity.REQUEST_BIND_APPWIDGET;
@@ -128,6 +129,10 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
                 case REQUEST_PICK_APPWIDGET:
                     configureAppWidget(data);
                     break;
+                case REQUEST_BIND_APPWIDGET:
+                    // User granted permission to bind widget, now configure it
+                    configureAppWidget(data);
+                    break;
                 case REQUEST_REFRESH_APPWIDGET:
                     refreshAppWidget(data);
                     break;
@@ -139,6 +144,7 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
             //if widget was not selected, delete id
             switch (requestCode) {
                 case REQUEST_PICK_APPWIDGET:
+                case REQUEST_BIND_APPWIDGET:
                     int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
                     if (appWidgetId != -1) {
                         mAppWidgetHost.deleteAppWidgetId(appWidgetId);
@@ -161,7 +167,7 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
             if (canAddWidget()) {
                 // request widget picker, a selection will lead to a call of onActivityResult
                 int appWidgetId = mAppWidgetHost.allocateAppWidgetId();
-                Intent pickIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_PICK);
+                Intent pickIntent = new Intent(mainActivity, WidgetPickerActivity.class);
                 pickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
                 mainActivity.startActivityForResult(pickIntent, REQUEST_PICK_APPWIDGET);
             } else {
@@ -646,21 +652,43 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
      */
     private void addAppWidget(Intent data) {
         try {
-            int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
+            final int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
             if (BuildConfig.DEBUG) Log.i(TAG, "addAppWidget: appWidgetId" + appWidgetId);
             //add widget
             WidgetPreferences wp = addWidgetToLauncher(appWidgetId);
 
             // Save widget in preferences
-
             SharedPreferences.Editor widgetPrefsEditor = widgetPrefs.edit();
             widgetPrefsEditor.putString(String.valueOf(appWidgetId), WidgetPreferences.serialize(wp));
             widgetPrefsEditor.apply();
+            
+            // Enter resize mode for the newly added widget after a short delay
+            // to ensure the view is fully added and laid out
+            widgetArea.postDelayed(() -> {
+                LauncherAppWidgetHostView hostView = findWidgetById(appWidgetId);
+                if (BuildConfig.DEBUG) Log.i(TAG, "addAppWidget: entering resize mode for " + appWidgetId + ", hostView=" + hostView);
+                if (hostView != null) {
+                    enterResizeMode(hostView);
+                }
+            }, 300);
         }
         catch (Exception e){
             Toast.makeText(mainActivity, "Failed to add widget", Toast.LENGTH_SHORT).show();
             Log.e(TAG, e.getMessage());
         }
+    }
+    
+    /**
+     * Find a widget host view by its app widget id
+     */
+    private LauncherAppWidgetHostView findWidgetById(int appWidgetId) {
+        for (int i = 0; i < getWidgetHostViewCount(); i++) {
+            LauncherAppWidgetHostView hostView = getWidgetHostView(i);
+            if (hostView != null && hostView.getAppWidgetId() == appWidgetId) {
+                return hostView;
+            }
+        }
+        return null;
     }
 
     /**
@@ -673,6 +701,28 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
 
         int appWidgetId = data.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, -1);
         if (BuildConfig.DEBUG) Log.i(TAG, "configureAppWidget: appWidgetId" + appWidgetId);
+        
+        // Check if binding was allowed (from custom widget picker)
+        boolean bindAllowed = data.getBooleanExtra(WidgetPickerActivity.EXTRA_WIDGET_BIND_ALLOWED, true);
+        
+        if (!bindAllowed && Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            // Need to request bind permission
+            ComponentName provider = data.getParcelableExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER);
+            if (provider != null) {
+                Intent intent = new Intent(AppWidgetManager.ACTION_APPWIDGET_BIND);
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+                intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER, provider);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    android.os.UserHandle profile = data.getParcelableExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER_PROFILE);
+                    if (profile != null) {
+                        intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_PROVIDER_PROFILE, profile);
+                    }
+                }
+                mainActivity.startActivityForResult(intent, REQUEST_BIND_APPWIDGET);
+                return;
+            }
+        }
+        
         AppWidgetProviderInfo appWidget =
                 mAppWidgetManager.getAppWidgetInfo(appWidgetId);
 
@@ -691,6 +741,12 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
             } else {
                 // Otherwise, finish adding the widget.
                 addAppWidget(data);
+            }
+        } else {
+            if (BuildConfig.DEBUG) Log.w(TAG, "configureAppWidget: appWidget is null for id " + appWidgetId);
+            // Delete the widget id since we couldn't bind it
+            if (appWidgetId != -1) {
+                mAppWidgetHost.deleteAppWidgetId(appWidgetId);
             }
         }
 
@@ -742,7 +798,7 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
         if (BuildConfig.DEBUG) Log.i(TAG, "onWidgetAdd");
         // request widget picker, a selection will lead to a call of onActivityResult
         int appWidgetId = mAppWidgetHost.allocateAppWidgetId();
-        Intent pickIntent = new Intent(AppWidgetManager.ACTION_APPWIDGET_PICK);
+        Intent pickIntent = new Intent(mainActivity, WidgetPickerActivity.class);
         pickIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
         mainActivity.startActivityForResult(pickIntent, REQUEST_PICK_APPWIDGET);
     }
