@@ -947,20 +947,56 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
     }
 
     Rect r = new Rect();
+    private int lastKeypadHeight = 0;
+    private int baseRootHeight = 0;
     private void initializeKeyboardListener() {
-        emptyListView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
-            emptyListView.getWindowVisibleDisplayFrame(r);
-            int screenHeight = emptyListView.getRootView().getHeight();
+        final View rootView = findViewById(android.R.id.content);
+        rootView.getViewTreeObserver().addOnGlobalLayoutListener(() -> {
+            rootView.getWindowVisibleDisplayFrame(r);
+            int screenHeight = rootView.getRootView().getHeight();
+            int rootHeight = rootView.getHeight();
+            
+            // Store base height when keyboard is not visible
+            if (baseRootHeight == 0 || rootHeight > baseRootHeight) {
+                baseRootHeight = rootHeight;
+            }
 
             // r.bottom is the position above soft keypad or device button.
             // if keypad is shown, the r.bottom is smaller than that before.
             int keypadHeight = screenHeight - r.bottom;
 
             // 0.15 ratio is perhaps enough to determine keypad height.
-            systemUiVisibilityHelper.onKeyboardVisibilityChanged(keypadHeight > screenHeight * 0.15);
+            boolean isKeyboardVisible = keypadHeight > screenHeight * 0.15;
+            systemUiVisibilityHelper.onKeyboardVisibilityChanged(isKeyboardVisible);
+            
+            // Check how much the system already resized the view
+            int systemResizeAmount = baseRootHeight - rootHeight;
+            
+            // If system handled most of the resize (>50% of keyboard height), don't add extra padding
+            // Otherwise add the full keyboard height as padding
+            int neededPadding = 0;
+            if (isKeyboardVisible) {
+                if (systemResizeAmount > keypadHeight * 0.5) {
+                    // System handled resize, no extra padding needed
+                    neededPadding = 0;
+                } else {
+                    // System didn't handle resize, add full padding
+                    neededPadding = keypadHeight;
+                }
+            }
+            
+            if (keypadHeight != lastKeypadHeight) {
+                lastKeypadHeight = keypadHeight;
+                
+                // Apply padding to root view to push everything up (including search bar)
+                rootView.setPadding(0, 0, 0, neededPadding);
+                
+                // Ensure list scrolls to show latest results
+                if (isKeyboardVisible && list != null && list.getCount() > 0) {
+                    list.setSelection(list.getCount() - 1);
+                }
+            }
         });
-
-
     }
 
     @Override
