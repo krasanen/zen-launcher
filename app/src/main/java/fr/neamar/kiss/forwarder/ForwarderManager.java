@@ -174,4 +174,15 @@ public class ForwarderManager extends Forwarder {
     public void showWidgetSettings() {
         widgetForwarder.onShowWidgetSettings();
     }
+
+    /**
+     * Handle back press, returns true if consumed
+     */
+    public boolean onBackPressed() {
+        if (widgetForwarder.isInResizeMode()) {
+            widgetForwarder.exitResizeMode();
+            return true;
+        }
+        return false;
+    }
 }

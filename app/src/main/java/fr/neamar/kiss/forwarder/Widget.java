@@ -21,6 +21,7 @@ import android.view.MenuItem;
 import android.view.SubMenu;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.FrameLayout;
 import android.widget.PopupMenu;
 import android.widget.Toast;
 
@@ -38,6 +39,7 @@ import fr.neamar.kiss.ZenWidget;
 import fr.neamar.kiss.ui.WidgetLayout;
 import fr.neamar.kiss.ui.WidgetMenu;
 import fr.neamar.kiss.ui.WidgetPreferences;
+import fr.neamar.kiss.ui.WidgetResizeFrame;
 
 import static android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_OPTIONS;
 import static fr.neamar.kiss.MainActivity.REQUEST_BIND_APPWIDGET;
@@ -64,6 +66,12 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
      * View widgets are added to
      */
     private WidgetLayout widgetArea;
+
+    /**
+     * Currently active resize frame, null if not in resize mode
+     */
+    private WidgetResizeFrame activeResizeFrame;
+    private LauncherAppWidgetHostView resizingWidget;
 
     Widget(MainActivity mainActivity) {
         super(mainActivity);
@@ -370,7 +378,132 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
     }
 
     private void resizeView(LauncherAppWidgetHostView hostView) {
-        onWidgetEdit(hostView.getAppWidgetId());
+        // Use finger-based resizing instead of slider menu
+        enterResizeMode(hostView);
+    }
+
+    /**
+     * Enters resize mode for the given widget, showing resize handles
+     */
+    private void enterResizeMode(LauncherAppWidgetHostView hostView) {
+        // Exit any existing resize mode first
+        exitResizeMode();
+
+        resizingWidget = hostView;
+
+        // Get current layout params
+        WidgetLayout.LayoutParams widgetParams = (WidgetLayout.LayoutParams) hostView.getLayoutParams();
+
+        // Create resize frame with same dimensions and position
+        activeResizeFrame = new WidgetResizeFrame(mainActivity);
+        activeResizeFrame.setTargetWidget(hostView);
+
+        WidgetLayout.LayoutParams frameParams = new WidgetLayout.LayoutParams(
+                widgetParams.width > 0 ? widgetParams.width : hostView.getMeasuredWidth(),
+                widgetParams.height > 0 ? widgetParams.height : hostView.getMeasuredHeight()
+        );
+        frameParams.leftMargin = widgetParams.leftMargin;
+        frameParams.topMargin = widgetParams.topMargin;
+        frameParams.gravity = widgetParams.gravity;
+        frameParams.position = widgetParams.position;
+
+        activeResizeFrame.setLayoutParams(frameParams);
+
+        // Set up resize listener
+        activeResizeFrame.setOnResizeListener(new WidgetResizeFrame.OnResizeListener() {
+            @Override
+            public void onResizeStart(View widget) {
+                if (BuildConfig.DEBUG) Log.i(TAG, "Resize started");
+            }
+
+            @Override
+            public void onResize(View widget, int newWidth, int newHeight, int deltaX, int deltaY) {
+                // Update the actual widget size in real-time
+                if (widget instanceof LauncherAppWidgetHostView) {
+                    LauncherAppWidgetHostView hostView = (LauncherAppWidgetHostView) widget;
+                    WidgetLayout.LayoutParams lp = (WidgetLayout.LayoutParams) hostView.getLayoutParams();
+                    lp.width = newWidth;
+                    lp.height = newHeight;
+                    lp.leftMargin = deltaX;
+                    lp.topMargin = deltaY;
+                    hostView.setLayoutParams(lp);
+                }
+            }
+
+            @Override
+            public void onResizeEnd(View widget, int finalWidth, int finalHeight, int finalX, int finalY) {
+                if (widget instanceof LauncherAppWidgetHostView) {
+                    LauncherAppWidgetHostView hostView = (LauncherAppWidgetHostView) widget;
+                    saveWidgetSize(hostView, finalWidth, finalHeight, finalX, finalY);
+                }
+            }
+
+            @Override
+            public void onResizeComplete() {
+                exitResizeMode();
+            }
+        });
+
+        // Add resize frame to widget area
+        widgetArea.addView(activeResizeFrame);
+
+        // Set up outside touch listener to exit resize mode
+        widgetArea.setActiveResizeFrame(activeResizeFrame);
+        widgetArea.setOnOutsideTouchListener(() -> exitResizeMode());
+
+        // Make the widget slightly transparent to show it's being edited
+        hostView.setAlpha(0.8f);
+
+        // Show a toast with instructions
+        Toast.makeText(mainActivity, R.string.resize_widget_hint, Toast.LENGTH_SHORT).show();
+    }
+
+    /**
+     * Exits resize mode and saves the widget dimensions
+     */
+    public void exitResizeMode() {
+        // Clear outside touch listener
+        widgetArea.setActiveResizeFrame(null);
+        widgetArea.setOnOutsideTouchListener(null);
+
+        if (activeResizeFrame != null) {
+            widgetArea.removeView(activeResizeFrame);
+            activeResizeFrame = null;
+        }
+        if (resizingWidget != null) {
+            resizingWidget.setAlpha(1.0f);
+            resizingWidget = null;
+        }
+    }
+
+    /**
+     * Saves the widget size to preferences
+     */
+    private void saveWidgetSize(LauncherAppWidgetHostView hostView, int width, int height, int left, int top) {
+        int appWidgetId = hostView.getAppWidgetId();
+        String data = widgetPrefs.getString(String.valueOf(appWidgetId), null);
+        WidgetPreferences wp = WidgetPreferences.unserialize(data);
+        if (wp == null) {
+            wp = new WidgetPreferences();
+        }
+
+        wp.width = width;
+        wp.height = height;
+        wp.offsetHorizontal = left;
+        wp.offsetVertical = top;
+
+        widgetPrefs.edit().putString(String.valueOf(appWidgetId), WidgetPreferences.serialize(wp)).apply();
+
+        if (BuildConfig.DEBUG) {
+            Log.i(TAG, "Saved widget size: " + width + "x" + height + " at (" + left + ", " + top + ")");
+        }
+    }
+
+    /**
+     * Check if currently in resize mode
+     */
+    public boolean isInResizeMode() {
+        return activeResizeFrame != null;
     }
 
     public void updateWidgets(Context context) {

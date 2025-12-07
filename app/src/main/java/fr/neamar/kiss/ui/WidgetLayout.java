@@ -5,6 +5,7 @@ import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.util.AttributeSet;
 import android.view.Gravity;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RemoteViews;
@@ -26,6 +27,13 @@ public class WidgetLayout extends ViewGroup {
     private final Rect mTmpContainerRect = new Rect();
     private final Rect mTmpChildRect = new Rect();
     private static final String TAG = WidgetLayout.class.getSimpleName();
+
+    public interface OnOutsideTouchListener {
+        void onTouchOutsideResizeFrame();
+    }
+
+    private OnOutsideTouchListener outsideTouchListener;
+    private WidgetResizeFrame activeResizeFrame;
 
     public WidgetLayout(Context context) {
         super(context);
@@ -146,6 +154,41 @@ public class WidgetLayout extends ViewGroup {
         int screenSize = getLayoutParams().width / 3;
         int scrollX = (int) (screenSize * 2.f * fCurrent);
         setScrollX(scrollX);
+    }
+
+    public void setOnOutsideTouchListener(OnOutsideTouchListener listener) {
+        this.outsideTouchListener = listener;
+    }
+
+    public void setActiveResizeFrame(WidgetResizeFrame frame) {
+        this.activeResizeFrame = frame;
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if (activeResizeFrame != null && ev.getAction() == MotionEvent.ACTION_DOWN) {
+            // Check if touch is outside the resize frame
+            int[] frameLocation = new int[2];
+            activeResizeFrame.getLocationOnScreen(frameLocation);
+
+            int frameLeft = frameLocation[0];
+            int frameTop = frameLocation[1];
+            int frameRight = frameLeft + activeResizeFrame.getWidth();
+            int frameBottom = frameTop + activeResizeFrame.getHeight();
+
+            float touchX = ev.getRawX();
+            float touchY = ev.getRawY();
+
+            if (touchX < frameLeft || touchX > frameRight ||
+                    touchY < frameTop || touchY > frameBottom) {
+                // Touch is outside the resize frame
+                if (outsideTouchListener != null) {
+                    outsideTouchListener.onTouchOutsideResizeFrame();
+                    return true; // Consume the touch
+                }
+            }
+        }
+        return super.onInterceptTouchEvent(ev);
     }
 
     /**

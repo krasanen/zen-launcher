@@ -1429,6 +1429,11 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
     public void onBackPressed() {
         if (BuildConfig.DEBUG) Log.i(TAG, "onBackPressed");
 
+        // Check if widget resize mode should be exited first
+        if (forwarderManager.onBackPressed()) {
+            return;
+        }
+
         if (mPopup != null) {
             mPopup.dismiss();
         } else if (isViewingAllApps()||findViewById(R.id.embeddedZenButtons).isShown()) {
