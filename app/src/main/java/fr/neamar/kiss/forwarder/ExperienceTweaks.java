@@ -76,6 +76,10 @@ public class ExperienceTweaks extends Forwarder {
     int width, height;
     public static boolean mNumericInputTypeForced = false;
     private boolean swipeDetected;
+    
+    // Cache timeout values to avoid blocking calls during touch events
+    private final int longPressTimeout;
+    private final int doubleTapTimeout;
 
     // divider that affects amount of pixels to be used in gesture detection
     // screen width / SWIPE_DIVIDER
@@ -84,6 +88,10 @@ public class ExperienceTweaks extends Forwarder {
 
     ExperienceTweaks(final MainActivity mainActivity) {
         super(mainActivity);
+
+        // Cache timeout values to avoid blocking calls during touch events (ANR fix)
+        longPressTimeout = ViewConfiguration.getLongPressTimeout();
+        doubleTapTimeout = ViewConfiguration.getDoubleTapTimeout();
 
         Display display = mainActivity.getWindowManager().getDefaultDisplay();
         Point size = new Point();
@@ -244,7 +252,7 @@ public class ExperienceTweaks extends Forwarder {
             case MotionEvent.ACTION_UP:
                 handler.removeCallbacksAndMessages(null);
 
-                if ((System.currentTimeMillis() - touchDownMs) > ViewConfiguration.getLongPressTimeout()) {
+                if ((System.currentTimeMillis() - touchDownMs) > longPressTimeout) {
                     //it was not a tap
 
                     numberOfTaps = 0;
@@ -253,7 +261,7 @@ public class ExperienceTweaks extends Forwarder {
                 }
 
                 if (numberOfTaps >= 0
-                        && (System.currentTimeMillis() - lastTapTimeMs) < ViewConfiguration.getDoubleTapTimeout()) {
+                        && (System.currentTimeMillis() - lastTapTimeMs) < doubleTapTimeout) {
                     numberOfTaps += 1;
                     if(BuildConfig.DEBUG) Log.i(TAG,"numberOfTaps += 1");
                 } else {
@@ -271,7 +279,7 @@ public class ExperienceTweaks extends Forwarder {
                             }
                         }
                     };
-                    handler.postDelayed(onetap, ViewConfiguration.getDoubleTapTimeout());
+                    handler.postDelayed(onetap, doubleTapTimeout);
                 }
 
                 lastTapTimeMs = System.currentTimeMillis();
@@ -290,7 +298,7 @@ public class ExperienceTweaks extends Forwarder {
                                 onDoubleTap();
                             }
                         }
-                    }, ViewConfiguration.getDoubleTapTimeout());
+                    }, doubleTapTimeout);
                 }
                 break;
             default:
