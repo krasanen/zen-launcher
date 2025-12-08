@@ -201,6 +201,9 @@ public class SettingsActivity extends PreferenceActivity implements
                     dialog.dismiss();
                 });
             }
+
+            // Fix for API 35+ where ListView content is hidden behind the toolbar
+            PreferenceScreenHelper.fixDialogListViewPadding(dialog, toolbar);
         }
 
         return false;
