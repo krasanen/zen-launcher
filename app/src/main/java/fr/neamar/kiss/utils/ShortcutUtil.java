@@ -20,8 +20,10 @@ import androidx.annotation.RequiresApi;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import fr.neamar.kiss.db.DBHelper;
 import fr.neamar.kiss.db.ShortcutRecord;
@@ -35,6 +37,8 @@ import static android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_MANIFEST;
 import static android.content.pm.LauncherApps.ShortcutQuery.FLAG_MATCH_PINNED;
 
 public class ShortcutUtil {
+    // Cache app names to avoid repeated resource loading (ANR prevention)
+    private static final Map<String, String> appNameCache = new HashMap<>();
 
     final static private String TAG = "ShortcutUtil";
 
@@ -194,16 +198,47 @@ public class ShortcutUtil {
      * @return App name from package name
      */
     public static String getAppNameFromPackageName(Context context, String packageName) {
+        // Check cache first to avoid resource loading
+        synchronized (appNameCache) {
+            if (appNameCache.containsKey(packageName)) {
+                return appNameCache.get(packageName);
+            }
+        }
+        
         try {
             PackageManager packageManager = context.getPackageManager();
             ApplicationInfo info = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-            return (String) packageManager.getApplicationLabel(info);
+            String appName = (String) packageManager.getApplicationLabel(info);
+            
+            // Cache the result
+            synchronized (appNameCache) {
+                appNameCache.put(packageName, appName);
+            }
+            
+            return appName;
         } catch (PackageManager.NameNotFoundException e) {
             e.printStackTrace();
             return null;
         }
     }
 
+    /**
+     * Clear cached app name for a specific package (call when package is updated/removed)
+     */
+    public static void clearAppNameCache(String packageName) {
+        synchronized (appNameCache) {
+            appNameCache.remove(packageName);
+        }
+    }
+
+    /**
+     * Clear all cached app names (call on app restart or when needed)
+     */
+    public static void clearAllAppNameCache() {
+        synchronized (appNameCache) {
+            appNameCache.clear();
+        }
+    }
 
     /**
      * @param context
