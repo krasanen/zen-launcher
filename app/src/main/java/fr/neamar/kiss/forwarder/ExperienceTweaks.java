@@ -237,12 +237,21 @@ public class ExperienceTweaks extends Forwarder {
         }
     }
     Handler handler = new Handler();
+    Handler gestureHandler = new Handler(); // Separate handler for async gesture processing
     int numberOfTaps = 0;
     long lastTapTimeMs = 0;
     long touchDownMs = 0;
+    
     boolean onTouch(View view, MotionEvent event) {
-        // Forward touch events to the gesture detector
-        gd.onTouchEvent(event);
+        // Process GestureDetector asynchronously to avoid blocking on ViewConfiguration calls
+        final MotionEvent eventCopy = MotionEvent.obtain(event);
+        gestureHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                gd.onTouchEvent(eventCopy);
+                eventCopy.recycle();
+            }
+        });
         sgd.onTouchEvent(event);
         switch (event.getAction()) {
             case MotionEvent.ACTION_DOWN:
