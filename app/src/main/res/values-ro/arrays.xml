@@ -19,4 +19,34 @@
         <item>DuckDuckGo|https://start.duckduckgo.com/?q={q}</item>
         <item>Google|https://encrypted.google.com/search?q={q}</item>
     </string-array>
+    <string-array name="gestureEntries">
+        <item>Nu face nimic</item>
+        <item>Afișează tastatura</item>
+        <item>Afișează panoul de notificări</item>
+        <item>Afișează lista de aplicații</item>
+        <item>Afișează istoricul</item>
+        <item>Afișează aplicațiile cu notificări</item>
+        <item>Afișează contactele</item>
+        <item>Afișează toate aplicațiile</item>
+        <item>Pornește cititorul de coduri de bare</item>
+        <item>Pornește lanterna</item>
+        <item>Blochează ecranul</item>
+        <item>Stinge ecranul</item>
+        <item>Ascunde tastatura</item>
+    </string-array>
+    <string-array name="gestureValues" translatable="false">
+        <item>do-nothing</item>
+        <item>display-keyboard</item>
+        <item>display-notifications</item>
+        <item>display-apps</item>
+        <item>display-history</item>
+        <item>display-apps-notif</item>
+        <item>display-contacts</item>
+        <item>display-all-apps</item>
+        <item>start-barcode-reader</item>
+        <item>start-flashlight</item>
+        <item>lock-screen</item>
+        <item>turn-off-screen</item>
+        <item>hide-keyboard</item>
+    </string-array>
 </resources>

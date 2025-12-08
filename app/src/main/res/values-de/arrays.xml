@@ -9,4 +9,34 @@
         <item>Transparent Dunkel</item>
         <item>AMOLED dark theme</item>
     </string-array>
+    <string-array name="gestureEntries">
+        <item>Nichts tun</item>
+        <item>Tastatur anzeigen</item>
+        <item>Benachrichtigungsleiste anzeigen</item>
+        <item>App-Liste anzeigen</item>
+        <item>Verlauf anzeigen</item>
+        <item>Apps mit Benachrichtigungen anzeigen</item>
+        <item>Kontakte anzeigen</item>
+        <item>Alle Apps anzeigen</item>
+        <item>Barcodeleser starten</item>
+        <item>Taschenlampe starten</item>
+        <item>Bildschirm sperren</item>
+        <item>Bildschirm ausschalten</item>
+        <item>Tastatur ausblenden</item>
+    </string-array>
+    <string-array name="gestureValues" translatable="false">
+        <item>do-nothing</item>
+        <item>display-keyboard</item>
+        <item>display-notifications</item>
+        <item>display-apps</item>
+        <item>display-history</item>
+        <item>display-apps-notif</item>
+        <item>display-contacts</item>
+        <item>display-all-apps</item>
+        <item>start-barcode-reader</item>
+        <item>start-flashlight</item>
+        <item>lock-screen</item>
+        <item>turn-off-screen</item>
+        <item>hide-keyboard</item>
+    </string-array>
 </resources>

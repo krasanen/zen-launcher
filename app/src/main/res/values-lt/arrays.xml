@@ -9,4 +9,34 @@
         <item>Tamsi permatoma tema</item>
         <item>AMOLED dark theme</item>
     </string-array>
+    <string-array name="gestureEntries">
+        <item>Nieko nedaryti</item>
+        <item>Rodyti klaviatūrą</item>
+        <item>Rodyti pranešimų uždangą</item>
+        <item>Rodyti programų sąrašą</item>
+        <item>Rodyti istoriją</item>
+        <item>Rodyti programas su pranešimais</item>
+        <item>Rodyti kontaktus</item>
+        <item>Rodyti visas programas</item>
+        <item>Paleisti brūkšninių kodų skaitytuvą</item>
+        <item>Įjungti žibintuvėlį</item>
+        <item>Užrakinti ekraną</item>
+        <item>Išjungti ekraną</item>
+        <item>Slėpti klaviatūrą</item>
+    </string-array>
+    <string-array name="gestureValues" translatable="false">
+        <item>do-nothing</item>
+        <item>display-keyboard</item>
+        <item>display-notifications</item>
+        <item>display-apps</item>
+        <item>display-history</item>
+        <item>display-apps-notif</item>
+        <item>display-contacts</item>
+        <item>display-all-apps</item>
+        <item>start-barcode-reader</item>
+        <item>start-flashlight</item>
+        <item>lock-screen</item>
+        <item>turn-off-screen</item>
+        <item>hide-keyboard</item>
+    </string-array>
 </resources>

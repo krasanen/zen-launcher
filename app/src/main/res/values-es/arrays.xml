@@ -48,6 +48,7 @@
         <item>Iniciar lector de códigos de barras</item>
         <item>Iniciar linterna</item>
         <item>Bloquear pantalla</item>
+        <item>Apagar pantalla</item>
         <item>Ocultar teclado</item>
     </string-array>
     <string-array name="gestureValues" translatable="false">
@@ -62,6 +63,7 @@
         <item>start-barcode-reader</item>
         <item>start-flashlight</item>
         <item>lock-screen</item>
+        <item>turn-off-screen</item>
         <item>hide-keyboard</item>
     </string-array>
 

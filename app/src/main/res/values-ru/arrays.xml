@@ -23,4 +23,34 @@
         <item>Mail.Ru|https://go.mail.ru/search?q=%s</item>
         <item>Спутник|https://www.sputnik.ru/search?q=%s</item>
     </string-array>
+    <string-array name="gestureEntries">
+        <item>Ничего не делать</item>
+        <item>Показать клавиатуру</item>
+        <item>Открыть шторку уведомлений</item>
+        <item>Показать список приложений</item>
+        <item>Показать историю</item>
+        <item>Показать приложения с уведомлениями</item>
+        <item>Показать контакты</item>
+        <item>Показать все приложения</item>
+        <item>Запустить сканер штрихкодов</item>
+        <item>Включить фонарик</item>
+        <item>Заблокировать экран</item>
+        <item>Выключить экран</item>
+        <item>Скрыть клавиатуру</item>
+    </string-array>
+    <string-array name="gestureValues" translatable="false">
+        <item>do-nothing</item>
+        <item>display-keyboard</item>
+        <item>display-notifications</item>
+        <item>display-apps</item>
+        <item>display-history</item>
+        <item>display-apps-notif</item>
+        <item>display-contacts</item>
+        <item>display-all-apps</item>
+        <item>start-barcode-reader</item>
+        <item>start-flashlight</item>
+        <item>lock-screen</item>
+        <item>turn-off-screen</item>
+        <item>hide-keyboard</item>
+    </string-array>
 </resources>

@@ -44,6 +44,7 @@
         <item>Käynnistä viivakoodilukija</item>
         <item>Käynnistä taskulamppu</item>
         <item>Lukitse näyttö</item>
+        <item>Sammuta näyttö</item>
         <item>Piilota näppäimistö</item>
     </string-array>
     <string-array name="gestureValues" translatable="false">
@@ -58,6 +59,7 @@
         <item>start-barcode-reader</item>
         <item>start-flashlight</item>
         <item>lock-screen</item>
+        <item>turn-off-screen</item>
         <item>hide-keyboard</item>
     </string-array>
 
