@@ -474,6 +474,11 @@
          android:key="enable-notifications"
          android:dialogMessage="@string/notification_dialog"
          android:title="@string/notification_support" />
+     <fr.neamar.kiss.SwitchPreference
+         android:defaultValue="true"
+         android:key="enable-app-badges"
+         android:title="@string/app_badges_title"
+         android:summary="@string/app_badges_summary" />
      <fr.neamar.kiss.preference.DefaultLauncherPreference
          android:dialogMessage="@string/default_launcher_warn"
          android:key="default-launcher"

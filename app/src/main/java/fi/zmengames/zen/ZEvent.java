@@ -51,6 +51,7 @@ public class ZEvent {
         GOOGLE_SIGN_OUT,
         SCREEN_ON,
         SCREEN_OFF,
+        SCREEN_OFF_GESTURE,
         ALARM_ENTERED_TEXT,
         ALARM_DATE_PICKER_MILLIS
     }

@@ -259,6 +259,8 @@
     <string name="enable_gestures_desc">(↑ for keyboard, ↓ for notifications)</string>
     <string name="notification_support">Display a dot on apps with notifications</string>
     <string name="notification_dialog">Check Zen Launcher in the following menu to turn it on.</string>
+    <string name="app_badges_title">App badge counts</string>
+    <string name="app_badges_summary">Allow compatible apps to send badge count updates</string>
     <string name="cant_pin_shortcut">Could not add shortcut. Is ZEN your default launcher\?</string>
     <string name="copy_confirmation">Copied to clipboard</string>
     <string name="unable_to_initialize_shortcuts">Unable to initialize shortcuts. Is Zen Launcher your default launcher?</string>

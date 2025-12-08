@@ -122,6 +122,7 @@ import fi.zmengames.zen.Utility;
 import fi.zmengames.zen.ZEvent;
 import fi.zmengames.zen.ZenAdmin;
 import fr.neamar.kiss.adapter.RecordAdapter;
+import fr.neamar.kiss.broadcast.BadgeCountHandler;
 import fr.neamar.kiss.broadcast.IncomingCallHandler;
 import fr.neamar.kiss.cache.MemoryCacheHelper;
 import fr.neamar.kiss.dataprovider.AppProvider;
@@ -709,6 +710,9 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
 
         // Enable/disable phone broadcast receiver
         IncomingCallHandler.setEnabled(this, prefs.getBoolean("enable-phone-history", false));
+
+        // Enable/disable badge count broadcast receiver
+        BadgeCountHandler.setEnabled(this, prefs.getBoolean("enable-app-badges", true));
 
         // Hide the "X" after the text field, instead displaying the menu button
         displayClearOnInput();

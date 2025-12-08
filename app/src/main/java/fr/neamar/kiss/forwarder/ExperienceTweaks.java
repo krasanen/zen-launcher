@@ -519,7 +519,7 @@ public class ExperienceTweaks extends Forwarder {
                 // Check if accessibility service is enabled, show disclosure if needed
                 if (AccessibilityDisclosureHelper.isAccessibilityServiceEnabled(mainActivity)) {
                     Intent intentScreenOff = new Intent(mainActivity, fi.zmengames.zen.LauncherService.class);
-                    intentScreenOff.setAction(ZEvent.State.SCREEN_OFF.toString());
+                    intentScreenOff.setAction(ZEvent.State.SCREEN_OFF_GESTURE.toString());
                     mainActivity.startService(intentScreenOff);
                 } else {
                     // Show prominent disclosure and request permission

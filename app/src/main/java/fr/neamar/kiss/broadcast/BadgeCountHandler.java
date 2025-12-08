@@ -8,6 +8,7 @@ import android.util.Log;
 import fr.neamar.kiss.BuildConfig;
 import fr.neamar.kiss.DataHandler;
 import fr.neamar.kiss.KissApplication;
+import fr.neamar.kiss.utils.PackageManagerUtils;
 
 public class BadgeCountHandler extends BroadcastReceiver {
     private static final String TAG = BadgeCountHandler.class.getSimpleName();
@@ -49,5 +50,9 @@ public class BadgeCountHandler extends BroadcastReceiver {
             }
         }
 
+    }
+
+    public static void setEnabled(Context context, boolean enabled) {
+        PackageManagerUtils.enableComponent(context, BadgeCountHandler.class, enabled);
     }
 }

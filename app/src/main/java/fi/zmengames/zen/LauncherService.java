@@ -23,6 +23,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityManager;
+import android.widget.Toast;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -57,6 +58,7 @@ import static fi.zmengames.zen.ZEvent.State.LAUNCH_INTENT;
 import static fi.zmengames.zen.ZEvent.State.NIGHTMODE_OFF;
 import static fi.zmengames.zen.ZEvent.State.NIGHTMODE_ON;
 import static fi.zmengames.zen.ZEvent.State.SCREEN_OFF;
+import static fi.zmengames.zen.ZEvent.State.SCREEN_OFF_GESTURE;
 import static fi.zmengames.zen.ZEvent.State.SCREEN_ON;
 import static fi.zmengames.zen.ZEvent.State.SHOW_TOAST;
 
@@ -167,8 +169,16 @@ public class LauncherService extends AccessibilityService {
 
     }
 
-    public void turnOffScreen(){
+    private void turnOffScreen(){
         if (BuildConfig.DEBUG) Log.d(TAG, "turnOffScreen");
+    }
+
+    private void turnOnScreen() {
+        if (BuildConfig.DEBUG) Log.d(TAG, "turnOnScreen");
+    }
+
+    private void turnOffScreenGesture(){
+        if (BuildConfig.DEBUG) Log.d(TAG, "turnOffScreenGesture");
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             boolean success = performGlobalAction(AccessibilityService.GLOBAL_ACTION_LOCK_SCREEN);
@@ -298,8 +308,9 @@ public class LauncherService extends AccessibilityService {
                 else if (intent.getAction().equals(LAUNCH_INTENT.toString())) launchIntent(intent);
                 else if (intent.getAction().equals(ENABLE_PROXIMITY.toString())) startListeningProximitySensor();
                 else if (intent.getAction().equals(DISABLE_PROXIMITY.toString())) stopListeningProximitySensor();
-                else if (intent.getAction().equals(SCREEN_ON.toString())) screenOn();
-                else if (intent.getAction().equals(SCREEN_OFF.toString())) screenOff();
+                else if (intent.getAction().equals(SCREEN_ON.toString())) turnOnScreen();
+                else if (intent.getAction().equals(SCREEN_OFF.toString())) turnOffScreen();
+                else if (intent.getAction().equals(SCREEN_OFF_GESTURE.toString())) turnOffScreenGesture();
                 else if (intent.getAction().equals(DEV_ADMIN_LOCK_AFTER.toString())) lockScreenAfter(intent);
                 else if (intent.getAction().equals(ALARM_IN_ACTION.toString())) alarmIn(intent);
                 else if (intent.getAction().equals(ALARM_PICKER.toString())) alarmAtPicker(intent);
@@ -351,9 +362,7 @@ public class LauncherService extends AccessibilityService {
     private void stopNightMode() {}
     private void launchIntent(Intent intent) {}
     private void screenOn() {}
-    private void screenOff() {
-        turnOffScreen();
-    }
+
     private void handleShowToast(String s) {}
     private void setAlarm(Calendar c, String s) {}
 }

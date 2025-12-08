@@ -41,7 +41,8 @@
 
  import fi.zmengames.zen.LauncherService;
  import fi.zmengames.zen.ZEvent;
- import fr.neamar.kiss.broadcast.IncomingCallHandler;
+ import fr.neamar.kiss.broadcast.BadgeCountHandler;
+import fr.neamar.kiss.broadcast.IncomingCallHandler;
  import fr.neamar.kiss.cache.MemoryCacheHelper;
  import fr.neamar.kiss.dataprovider.AppProvider;
  import fr.neamar.kiss.dataprovider.SearchProvider;
@@ -464,6 +465,10 @@ public class SettingsActivity extends PreferenceActivity implements
             } else {
                 setPhoneHistoryEnabled(enabled);
             }
+        } else if (key.equalsIgnoreCase("enable-app-badges")) {
+            boolean enabled = sharedPreferences.getBoolean(key, true);
+            setAppBadgesEnabled(enabled);
+            KissApplication.getApplication(this).getDataHandler().getBadgeHandler();
         } else if (key.equalsIgnoreCase("primary-color")) {
             UIColors.clearPrimaryColorCache(this);
         } else if (key.equalsIgnoreCase("number-of-display-elements")) {
@@ -504,6 +509,10 @@ public class SettingsActivity extends PreferenceActivity implements
             Intent intent = roleManager.createRequestRoleIntent(RoleManager.ROLE_CALL_SCREENING);
             startActivityForResult(intent, 1);
         }
+    }
+
+    private void setAppBadgesEnabled(boolean enabled) {
+        BadgeCountHandler.setEnabled(this, enabled);
     }
 
     @Override
