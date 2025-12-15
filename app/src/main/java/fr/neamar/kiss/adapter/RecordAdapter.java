@@ -113,14 +113,11 @@ public class RecordAdapter extends BaseAdapter implements SectionIndexer {
     }
 
     public void onClick(final int position, View v) {
-        final Result result;
         if (results.isEmpty()) {
-            // Handle the case where the list is empty, would cause IndexOutOfBoundsException
-            Log.v(TAG,"onClick on empty results");
             return;
         }
         try {
-            result = results.get(position);
+            Result result = results.get(position);
             result.launch(v.getContext(), v, parent);
         } catch (ArrayIndexOutOfBoundsException ignored) {
         }

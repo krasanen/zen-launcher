@@ -58,7 +58,8 @@ public class LoadSettingsPojos extends LoadPojos<SettingsPojo> {
         if (resolveInfos == null || resolveInfos.size() == 0) {
             return "";
         }
-        return resolveInfos.get(0).loadLabel(context.get().getPackageManager()).toString();
+        // Return package name instead of loading label to avoid ResourcesManager lock contention
+        return resolveInfos.get(0).activityInfo.packageName;
     }
 
     @Override
@@ -87,22 +88,40 @@ public class LoadSettingsPojos extends LoadPojos<SettingsPojo> {
                     ResolveInfo resolveInfo = pm.resolveActivity(testIntent, PackageManager.MATCH_SYSTEM_ONLY);
                     if (resolveInfo != null) {
                         if ((resolveInfo.activityInfo.name != null) && (!resolveInfo.activityInfo.name.equals(DEFAULT_RESOLVER))) {
-                            String label = resolveInfo.loadLabel(pm).toString();
+                            // Use try-catch to handle resource loading failures gracefully
+                            // This prevents ANR from ResourcesManager lock contention
+                            String label;
+                            try {
+                                CharSequence labelCs = resolveInfo.loadLabel(pm);
+                                label = labelCs != null ? labelCs.toString() : "";
+                            } catch (Exception e) {
+                                // Fallback to activity name if label loading fails
+                                label = resolveInfo.activityInfo.name;
+                            }
                             if (!label.isEmpty()) {
-                                if (BuildConfig.DEBUG) Log.i(TAG, "loadLabel: " + resolveInfo.loadLabel(pm).toString());
-                                for (SettingsPojo pojo:settings)
-                                    if (pojo.getName().equals(label)||label.equals(settingsPkgName)||label.isEmpty()){
-                                        break outerloop;
+                                if (BuildConfig.DEBUG) Log.i(TAG, "loadLabel: " + label);
+                                // Check if this setting already exists
+                                boolean isDuplicate = false;
+                                for (SettingsPojo pojo : settings) {
+                                    if (pojo.getName().equals(label) || resolveInfo.activityInfo.packageName.equals(settingsPkgName)) {
+                                        isDuplicate = true;
+                                        break;
                                     }
                                 }
-                                SettingsPojo pojo = createPojo(label, resolveInfo.activityInfo.packageName, resolveInfo.activityInfo.name);
-                                if (!settings.contains(pojo)) {
-                                    settings.add(pojo);
+                                if (!isDuplicate) {
+                                    // Use the action string 's' (e.g., android.settings.MANAGE_DEFAULT_APPS_SETTINGS)
+                                    // as settingName, not the activity class name. This allows SettingsResult.doLaunch()
+                                    // to create an intent with the correct action.
+                                    SettingsPojo pojo = createPojo(label, s, R.drawable.settings);
+                                    if (!settings.contains(pojo)) {
+                                        settings.add(pojo);
+                                    }
                                 }
                             }
                         } else {
                             //No Application can handle your intent
                         }
+                    }
 
                 } catch (Exception e) {
 

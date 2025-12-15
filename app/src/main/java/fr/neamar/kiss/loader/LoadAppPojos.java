@@ -94,7 +94,17 @@ public class LoadAppPojos extends LoadPojos<AppPojo> {
                     AppPojo app = new AppPojo(id, appInfo.packageName, activityInfo.getName(), user,
                             isExcluded, isExcludedFromHistory);
 
-                    app.setName(activityInfo.getLabel().toString());
+                    // Use try-catch to handle resource loading failures gracefully
+                    // This prevents ANR from ResourcesManager lock contention
+                    String appLabel;
+                    try {
+                        CharSequence labelCs = activityInfo.getLabel();
+                        appLabel = labelCs != null ? labelCs.toString() : activityInfo.getName();
+                    } catch (Exception e) {
+                        // Fallback to activity name if label loading fails
+                        appLabel = activityInfo.getName();
+                    }
+                    app.setName(appLabel);
 
                     app.setTags(tagsHandler.getTags(app.id));
 
@@ -121,7 +131,15 @@ public class LoadAppPojos extends LoadPojos<AppPojo> {
                 AppPojo app = new AppPojo(id, appInfo.packageName, info.activityInfo.name, new UserHandle(),
                         isExcluded, isExcludedFromHistory);
 
-                app.setName(info.loadLabel(manager).toString());
+                // Use try-catch to handle resource loading failures gracefully
+                String appLabel;
+                try {
+                    CharSequence labelCs = info.loadLabel(manager);
+                    appLabel = labelCs != null ? labelCs.toString() : info.activityInfo.name;
+                } catch (Exception e) {
+                    appLabel = info.activityInfo.name;
+                }
+                app.setName(appLabel);
 
                 app.setTags(tagsHandler.getTags(app.id));
 
@@ -159,7 +177,15 @@ public class LoadAppPojos extends LoadPojos<AppPojo> {
         AppPojo app = new AppPojo(id, appInfo.packageName, info.activityInfo.name, new UserHandle(),
                 isExcluded, isExcludedFromHistory);
 
-        app.setName(info.loadLabel(manager).toString());
+        // Use try-catch to handle resource loading failures gracefully
+        String appLabel;
+        try {
+            CharSequence labelCs = info.loadLabel(manager);
+            appLabel = labelCs != null ? labelCs.toString() : info.activityInfo.name;
+        } catch (Exception e) {
+            appLabel = info.activityInfo.name;
+        }
+        app.setName(appLabel);
 
         app.setTags(tagsHandler.getTags(app.id));
 
@@ -177,7 +203,15 @@ public class LoadAppPojos extends LoadPojos<AppPojo> {
         AppPojo app = new AppPojo(id, appInfo.packageName, activityInfo.getName(), user,
                 isExcluded, isExcludedFromHistory);
 
-        app.setName(activityInfo.getLabel().toString());
+        // Use try-catch to handle resource loading failures gracefully
+        String appLabelLollipop;
+        try {
+            CharSequence labelCs = activityInfo.getLabel();
+            appLabelLollipop = labelCs != null ? labelCs.toString() : activityInfo.getName();
+        } catch (Exception e) {
+            appLabelLollipop = activityInfo.getName();
+        }
+        app.setName(appLabelLollipop);
 
         app.setTags(tagsHandler.getTags(app.id));
         return app;

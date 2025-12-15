@@ -12,6 +12,9 @@ import android.util.Log;
 import android.view.Window;
 import android.view.WindowManager;
 
+import androidx.activity.EdgeToEdge;
+import androidx.core.view.WindowCompat;
+
 public class UIColors {
     private static final String TAG = UIColors.class.getSimpleName();
     public static final int COLOR_DEFAULT = 0xFF0097A7;
@@ -154,12 +157,21 @@ public class UIColors {
             return;
         }
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            Window window = activity.getWindow();
+        Window window = activity.getWindow();
+        
+        // Use modern edge-to-edge APIs for Android 15+ compatibility
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // On Android 15+, setStatusBarColor is deprecated and no-op
+            // Use WindowCompat to control appearance instead
+            WindowCompat.setDecorFitsSystemWindows(window, true);
+            // Determine if we should use light or dark status bar icons based on color brightness
+            boolean isLightColor = isColorLight(notificationBarColorOverride);
+            WindowCompat.getInsetsController(window, window.getDecorView())
+                    .setAppearanceLightStatusBars(isLightColor);
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS);
             window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS);
-
-            // Update status bar color
+            // Update status bar color (deprecated on API 35+, but works on older versions)
             window.setStatusBarColor(notificationBarColorOverride);
         }
 
@@ -167,6 +179,14 @@ public class UIColors {
         if (actionBar != null) {
             actionBar.setBackgroundDrawable(new ColorDrawable(notificationBarColorOverride));
         }
+    }
+
+    /**
+     * Determines if a color is light (for choosing status bar icon color)
+     */
+    private static boolean isColorLight(int color) {
+        double darkness = 1 - (0.299 * Color.red(color) + 0.587 * Color.green(color) + 0.114 * Color.blue(color)) / 255;
+        return darkness < 0.5;
     }
 
     private static int getNotificationBarColor(Context context) {

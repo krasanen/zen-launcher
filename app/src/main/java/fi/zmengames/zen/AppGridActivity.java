@@ -11,6 +11,8 @@ import android.view.Menu;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
+
+import androidx.core.view.WindowCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import fr.neamar.kiss.BuildConfig;
@@ -52,9 +54,18 @@ public class AppGridActivity extends FragmentActivity {
 
         UIColors.updateThemePrimaryColor(this);
         this.getTheme().applyStyle(prefs.getBoolean("small-results", false) ? R.style.OverlayResultSizeSmall : R.style.OverlayResultSizeStandard, true);
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            Window window = getWindow();
-            int backgroundColor = getColorBasedOnTheme(this, R.attr.listBackgroundColor);
+        
+        // Handle status bar color with Android 15+ compatibility
+        Window window = getWindow();
+        int backgroundColor = getColorBasedOnTheme(this, R.attr.listBackgroundColor);
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // On Android 15+, setStatusBarColor is deprecated and no-op
+            // Use WindowCompat to control appearance instead
+            WindowCompat.setDecorFitsSystemWindows(window, true);
+            boolean isLightColor = isColorLight(backgroundColor);
+            WindowCompat.getInsetsController(window, window.getDecorView())
+                    .setAppearanceLightStatusBars(isLightColor);
+        } else if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
             window.setStatusBarColor(backgroundColor);
         }
         setContentView(R.layout.appgripscreen);
@@ -65,6 +76,17 @@ public class AppGridActivity extends FragmentActivity {
         TypedValue typedValue = new TypedValue();
         context.getTheme().resolveAttribute(attr, typedValue, true);
         return typedValue.data;
+    }
+
+    /**
+     * Determines if a color is light (for choosing status bar icon color)
+     */
+    private boolean isColorLight(int color) {
+        int red = (color >> 16) & 0xFF;
+        int green = (color >> 8) & 0xFF;
+        int blue = color & 0xFF;
+        double darkness = 1 - (0.299 * red + 0.587 * green + 0.114 * blue) / 255;
+        return darkness < 0.5;
     }
 
     float startY;

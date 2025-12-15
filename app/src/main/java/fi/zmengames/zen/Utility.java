@@ -20,6 +20,8 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.PopupMenu;
 
+import androidx.core.view.WindowCompat;
+
 import fr.neamar.kiss.BuildConfig;
 
 /**
@@ -41,9 +43,16 @@ public final class Utility {
      */
     public static void applyTransparentSystemUI(Activity activity) {
         Window window = activity.getWindow();
-        window.getDecorView().setSystemUiVisibility(UI_VISIBILITY_TRANSPARENT_LOLLIPOP);
-        window.setStatusBarColor(Color.TRANSPARENT);
-        window.setNavigationBarColor(Color.TRANSPARENT);
+        
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            // On Android 15+, use modern edge-to-edge APIs
+            WindowCompat.setDecorFitsSystemWindows(window, false);
+            // Status bar and navigation bar are transparent by default in edge-to-edge mode
+        } else {
+            window.getDecorView().setSystemUiVisibility(UI_VISIBILITY_TRANSPARENT_LOLLIPOP);
+            window.setStatusBarColor(Color.TRANSPARENT);
+            window.setNavigationBarColor(Color.TRANSPARENT);
+        }
     }
 
 

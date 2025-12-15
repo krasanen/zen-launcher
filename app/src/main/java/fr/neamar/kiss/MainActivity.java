@@ -73,6 +73,9 @@ import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
@@ -554,6 +557,19 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
          * Set the view and store all useful components
          */
         setContentView(R.layout.main);
+
+        // Apply window insets for navigation bar padding (Android 15+ edge-to-edge)
+        View searchEditLayout = findViewById(R.id.searchEditLayout);
+        ViewCompat.setOnApplyWindowInsetsListener(searchEditLayout, (v, windowInsets) -> {
+            Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
+            // Get the original margin from layout (10dp)
+            int originalMargin = getResources().getDimensionPixelSize(R.dimen.search_bar_margin);
+            // Apply bottom inset as additional margin
+            ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
+            params.bottomMargin = originalMargin + insets.bottom;
+            v.setLayoutParams(params);
+            return windowInsets;
+        });
 
         this.list = this.findViewById(android.R.id.list);
         this.listContainer = (View) this.list.getParent();

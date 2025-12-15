@@ -66,7 +66,11 @@ public class AlarmActivity extends Activity {
             if (BuildConfig.DEBUG) Log.d(TAG,"1:"+  getIntent().getStringExtra(ALARM_TIME));Log.d(TAG,"alarmText:"+alarmText);
         }
 
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        // Note: Orientation restrictions are ignored on large screen devices from Android 16+
+        // The layout should work in both portrait and landscape orientations
+        if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        }
         setContentView(R.layout.activity_alarm);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED | WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON | WindowManager.LayoutParams.FLAG_ALLOW_LOCK_WHILE_SCREEN_ON);
         disableDnd();
