@@ -24,7 +24,7 @@ jobs:
     - name: Build with Gradle
       run: ./gradlew assembleDebug
     - name: Upload a Build Artifact
-      uses: actions/upload-artifact@v2.2.4
+      uses: actions/upload-artifact@v4
       with:
         name: assets-for-download
         path: app/build/outputs
