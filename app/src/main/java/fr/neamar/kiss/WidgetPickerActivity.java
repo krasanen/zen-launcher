@@ -31,6 +31,10 @@ import androidx.annotation.WorkerThread;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import androidx.core.graphics.Insets;
+import androidx.core.view.ViewCompat;
+import androidx.core.view.WindowInsetsCompat;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -82,9 +86,27 @@ public class WidgetPickerActivity extends Activity {
         setContentView(R.layout.activity_widget_picker);
         UIColors.updateThemePrimaryColor(this);
 
+        View root = findViewById(R.id.widget_picker_root);
         View loadingContainer = findViewById(R.id.loading_container);
         RecyclerView recyclerView = findViewById(R.id.widget_list);
         EditText searchBox = findViewById(R.id.widget_search);
+
+        if (root != null) {
+            final int baseLeft = root.getPaddingLeft();
+            final int baseTop = root.getPaddingTop();
+            final int baseRight = root.getPaddingRight();
+            final int baseBottom = root.getPaddingBottom();
+            ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+                Insets sysInsets = insets.getInsets(WindowInsetsCompat.Type.systemBars());
+                v.setPadding(
+                        baseLeft + sysInsets.left,
+                        baseTop + sysInsets.top,
+                        baseRight + sysInsets.right,
+                        baseBottom + sysInsets.bottom
+                );
+                return insets;
+            });
+        }
 
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         adapter = new WidgetAdapter(this::onWidgetSelected);
