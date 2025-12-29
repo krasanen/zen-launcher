@@ -560,14 +560,24 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
 
         // Apply window insets for navigation bar padding (Android 15+ edge-to-edge)
         View searchEditLayout = findViewById(R.id.searchEditLayout);
+        View kissBarView = findViewById(R.id.mainKissbar);
+        final int searchBarBaseMargin = getResources().getDimensionPixelSize(R.dimen.search_bar_margin);
+        final int kissBarBaseMargin = kissBarView != null && kissBarView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams
+                ? ((ViewGroup.MarginLayoutParams) kissBarView.getLayoutParams()).bottomMargin
+                : 0;
         ViewCompat.setOnApplyWindowInsetsListener(searchEditLayout, (v, windowInsets) -> {
             Insets insets = windowInsets.getInsets(WindowInsetsCompat.Type.systemBars());
-            // Get the original margin from layout (10dp)
-            int originalMargin = getResources().getDimensionPixelSize(R.dimen.search_bar_margin);
-            // Apply bottom inset as additional margin
+            // Apply bottom inset as additional margin for the search bar
             ViewGroup.MarginLayoutParams params = (ViewGroup.MarginLayoutParams) v.getLayoutParams();
-            params.bottomMargin = originalMargin + insets.bottom;
+            params.bottomMargin = searchBarBaseMargin + insets.bottom;
             v.setLayoutParams(params);
+
+            // Mirror the inset adjustment on the Zen bar shown when apps are opened
+            if (kissBarView != null && kissBarView.getLayoutParams() instanceof ViewGroup.MarginLayoutParams) {
+                ViewGroup.MarginLayoutParams kissParams = (ViewGroup.MarginLayoutParams) kissBarView.getLayoutParams();
+                kissParams.bottomMargin = kissBarBaseMargin + insets.bottom;
+                kissBarView.setLayoutParams(kissParams);
+            }
             return windowInsets;
         });
 
