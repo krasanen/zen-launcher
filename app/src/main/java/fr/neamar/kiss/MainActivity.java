@@ -43,6 +43,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
@@ -1079,6 +1080,8 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
 
     Camera camera = null;
 
+    private final Handler flashlightUiHandler = new Handler(Looper.getMainLooper());
+
     public void toggleFlashLight() {
         if (BuildConfig.DEBUG) Log.i(TAG, "toggleFlashLight");
         flashToggle = !flashToggle;
@@ -1094,18 +1097,24 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
                     }
                 }
             } catch (Exception e2) {
-                Toast.makeText(getApplicationContext(), "Torch Failed: " + e2.getMessage(), Toast.LENGTH_SHORT).show();
+                showFlashlightStatus("Torch Failed: " + e2.getMessage());
             }
         } else {  //Lollipop and older
             toggleFlashLightPreM(flashToggle);
         }
 
         if (flashToggle) {
-            Toast.makeText(this, R.string.flashlight_on, Toast.LENGTH_SHORT).show();
+            showFlashlightStatus(getString(R.string.flashlight_on));
         } else {
-            Toast.makeText(this, R.string.flashlight_off, Toast.LENGTH_SHORT).show();
+            showFlashlightStatus(getString(R.string.flashlight_off));
         }
 
+    }
+
+    private void showFlashlightStatus(CharSequence message) {
+        flashlightUiHandler.post(() ->
+                Toast.makeText(getApplicationContext(), message, Toast.LENGTH_SHORT).show()
+        );
     }
 
     public void toggleFlashLightPreM(boolean on) {
