@@ -221,7 +221,7 @@ public class Widget extends Forwarder implements WidgetMenu.OnClickListener {
     /**
      * Restores all previously added widgets
      */
-    private void restoreWidgets() {
+    public void restoreWidgets() {
         if (BuildConfig.DEBUG) Log.w("Widget", "restoreWidgets");
         Map<String, ?> widgetIds = widgetPrefs.getAll();
         for (String appWidgetId : widgetIds.keySet()) {

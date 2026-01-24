@@ -2014,6 +2014,12 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
                 Toast.makeText(this, "can't load tags", Toast.LENGTH_LONG).show();
             }
             Toast.makeText(this, "loaded widgets for " + count + " app(s)", Toast.LENGTH_LONG).show();
+            try {
+                forwarderManager.restoreWidgets();
+            } catch (Exception e) {
+                Log.e(TAG, "can't restore widgets", e);
+                Toast.makeText(this, "can't restore widgets", Toast.LENGTH_LONG).show();
+            }
 
         } catch (ClassNotFoundException e) {
             Log.e(TAG, "ClassNotFoundException", e);

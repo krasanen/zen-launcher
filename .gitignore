@@ -126,3 +126,7 @@ app/release/
 docs/_site
 
 signing.properties
+
+# Google Services configuration
+google-services.json
+app/google-services.json

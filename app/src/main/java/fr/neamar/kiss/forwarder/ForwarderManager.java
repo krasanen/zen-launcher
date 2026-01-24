@@ -163,6 +163,10 @@ public class ForwarderManager extends Forwarder {
         widgetForwarder.removeAllWidgets();
     }
 
+    public void restoreWidgets() {
+        widgetForwarder.restoreWidgets();
+    }
+
     public void addWidget() {
         widgetForwarder.onWidgetAdd();
     }

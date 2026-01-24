@@ -219,3 +219,5 @@ abstract class BuildTimeValueSource implements ValueSource<String, ValueSourcePa
         return formattedDate
     }
 }
+
+apply plugin: 'com.google.gms.google-services'
