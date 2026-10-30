@@ -517,7 +517,6 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
         return prefs.getBoolean("enable-favorites-bar", true);
     }
 
-    Uri samsungBadgeUri = Uri.parse("content://com.sec.badge/apps");
     IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
     BroadcastReceiver mReceiver = new ScreenReceiver(this);
     /**
@@ -1149,17 +1148,11 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
     protected void onResume() {
         if (BuildConfig.DEBUG) Log.i(TAG, "onResume()");
         AlarmUtils.retryPendingAlarmsAsync(this);
-        // Apps may notify badge updates for Samsung devices
-        // through a ContentResolver on the url: content://com.sec.badge/apps
-        if (SamsungBadgeObserver.providerExists(this)) {
-
-            //Content Resolver has content, so, register for updates and load its actual content
-            samsungBadgeObserver = new SamsungBadgeObserver(new Handler(), this);
-            getContentResolver()
-                    .registerContentObserver(samsungBadgeUri, false,
-                            new SamsungBadgeObserver(new Handler(), this));
-            SamsungBadgeObserver.loadBadges(this);
+        // Provider queries and Binder registration must not delay the first frame.
+        if (samsungBadgeObserver == null) {
+            samsungBadgeObserver = new SamsungBadgeObserver(new Handler(Looper.getMainLooper()), this);
         }
+        samsungBadgeObserver.startObserving();
 
         if (flashToggle) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
@@ -2584,9 +2577,8 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
     protected void onPause() {
         super.onPause();
         forwarderManager.onPause();
-        if (SamsungBadgeObserver.providerExists(this)) {
-            getContentResolver()
-                    .unregisterContentObserver(samsungBadgeObserver);
+        if (samsungBadgeObserver != null) {
+            samsungBadgeObserver.stopObserving();
         }
         /*if (mScannerViewBar !=null) {
             if (BuildConfig.DEBUG) Log.d(TAG,"onPause, mScannerViewBar");

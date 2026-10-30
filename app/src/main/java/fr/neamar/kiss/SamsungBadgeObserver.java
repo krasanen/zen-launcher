@@ -18,10 +18,56 @@ import fi.zmengames.zen.ZEvent;
 public class SamsungBadgeObserver extends ContentObserver {
     private static final String TAG = SamsungBadgeObserver.class.getSimpleName();
     private final Context context;
+    private static final Uri BADGE_URI = Uri.parse("content://com.sec.badge/apps");
+    // Accessed only on mExecutor, keeping resume/pause operations in order.
+    private boolean registered;
 
     public SamsungBadgeObserver(Handler handler, Context context) {
         super(handler);
-        this.context = context;
+        this.context = context.getApplicationContext();
+    }
+
+    public void startObserving() {
+        mExecutor.execute(() -> {
+            try {
+                if (!registered && providerAvailable()) {
+                    registerObserver();
+                    registered = true;
+                }
+                if (registered) refreshBadges();
+            } catch (RuntimeException e) {
+                Log.w(TAG, "Could not observe Samsung badges", e);
+            }
+        });
+    }
+
+    public void stopObserving() {
+        mExecutor.execute(() -> {
+            if (registered) {
+                try {
+                    unregisterObserver();
+                    registered = false;
+                } catch (RuntimeException e) {
+                    Log.w(TAG, "Could not stop observing Samsung badges", e);
+                }
+            }
+        });
+    }
+
+    protected boolean providerAvailable() {
+        return providerExists(context);
+    }
+
+    protected void registerObserver() {
+        context.getContentResolver().registerContentObserver(BADGE_URI, false, this);
+    }
+
+    protected void unregisterObserver() {
+        context.getContentResolver().unregisterContentObserver(this);
+    }
+
+    protected void refreshBadges() {
+        loadBadges(context);
     }
 
     @Override
@@ -58,13 +104,9 @@ public class SamsungBadgeObserver extends ContentObserver {
                 if (BuildConfig.DEBUG) Log.i(TAG, "loadBadges");
 
                 Uri uri = Uri.parse("content://com.sec.badge/apps");
-                Cursor cursor = context.getContentResolver().query(uri, null, null, null, null);
-                // Return if cursor is null. Means provider does not exists
-                if (cursor == null) {
-                    return;
-                }
-
-                try {
+                try (Cursor cursor = context.getContentResolver().query(uri, null, null, null, null)) {
+                    // The provider may disappear or access may be revoked after registration.
+                    if (cursor == null) return;
                     if (!cursor.moveToFirst()) {
                         // No results. Nothing to query
                         return;
@@ -88,8 +130,8 @@ public class SamsungBadgeObserver extends ContentObserver {
                             badgeHandler.setBadgeCount(packageName, badgeCount);
                         }
                     }
-                } finally {
-                    cursor.close();
+                } catch (RuntimeException e) {
+                    Log.w(TAG, "Could not load Samsung badges", e);
                 }
             }
         });
