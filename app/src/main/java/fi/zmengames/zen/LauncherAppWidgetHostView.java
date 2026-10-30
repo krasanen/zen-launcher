@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
@@ -14,11 +15,15 @@ import android.view.ViewConfiguration;
 import android.view.ViewGroup;
 
 import java.util.Arrays;
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
 
 import fr.neamar.kiss.BuildConfig;
 import fr.neamar.kiss.R;
 
 public class LauncherAppWidgetHostView extends AppWidgetHostView {
+    // Share a bounded number of workers across widgets and activity recreations.
+    private static final Executor INFLATION_EXECUTOR = Executors.newFixedThreadPool(2);
     private final LayoutInflater mInflater;
     private final Context context;
     GestureDetector gd;
@@ -27,6 +32,11 @@ public class LauncherAppWidgetHostView extends AppWidgetHostView {
         super(context);
         this.context = context;
         mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            // Configure this before AppWidgetHost.createView delivers its first
+            // RemoteViews update. The framework applies the result on the UI thread.
+            setExecutor(INFLATION_EXECUTOR);
+        }
         gd = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
 
             @Override
