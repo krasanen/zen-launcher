@@ -23,7 +23,6 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
-import android.os.PowerManager;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.util.Log;
@@ -40,7 +39,6 @@ import org.greenrobot.eventbus.EventBus;
 
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -380,64 +378,37 @@ public class LauncherService extends AccessibilityService {
         if (BuildConfig.DEBUG)  Log.d(TAG,"alarmIn, minutes:"+ minutes);
         Calendar calAlarm = Calendar.getInstance();
         calAlarm.setTimeZone(TimeZone.getTimeZone("GMT"));
-        Date alarm = new Date(System.currentTimeMillis()+minutes*60*1000);
-        alarm.setSeconds(0);
-        calAlarm.setTimeInMillis(alarm.getTime());
-        setAlarm(calAlarm, query);
+        long delayMillis = minutes * 60 * 1000;
+        calAlarm.setTimeInMillis(System.currentTimeMillis() + delayMillis);
+        setAlarm(calAlarm, query, delayMillis);
     }
 
-
-    private void checkBatteryOptimizations(){
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            Intent intent = new Intent();
-            String packageName = getPackageName();
-            PowerManager pm = (PowerManager) getSystemService(POWER_SERVICE);
-            if (pm!=null && !pm.isIgnoringBatteryOptimizations(packageName)) {
-                handleShowToast(getResources().getString(R.string.alarm_battery_optimization));
-                intent.setAction(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                intent.setData(Uri.parse("package:" + packageName));
-                try {
-                    startActivity(intent);
-                } catch (RuntimeException e){
-                    handleShowToast(getResources().getString(R.string.alarm_battery_optimization));
-                }
-            }
-        }
-    }
-
-
-    private void checkDnd() {
-        // Get the notification manager instance
-        NotificationManager mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-        checkBatteryOptimizations();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // If notification policy access granted for this package
-            if (mNotificationManager != null && mNotificationManager.isNotificationPolicyAccessGranted()) {
-            } else {
-                handleShowToast(getResources().getString(R.string.notification_access));
-                Intent intent = new Intent(Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS);
-                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                try {
-                    startActivity(intent);
-                } catch (RuntimeException e){
-                    handleShowToast(getResources().getString(R.string.notification_access));
-                }
-            }
-        }
-    }
 
     private void setAlarm(Calendar targetCal, String query) {
-        checkDnd();
-        handleShowToast(getResources().getString(R.string.alarm_is_set_at)
-                + " " + targetCal.getTime());
+        setAlarm(targetCal, query, 0);
+    }
+
+    private void setAlarm(Calendar targetCal, String query, long delayMillis) {
         if (BuildConfig.DEBUG) Log.d(TAG,"targetCal.getTimeInMillis():"+targetCal.getTimeInMillis());
         Intent intent = new Intent(getApplicationContext(), AlarmReceiver.class);
         long notificationId = targetCal.getTimeInMillis();
         intent.putExtra(ALARM_ID, notificationId);
         intent.putExtra(ALARM_EXTRA, query);
         intent.putExtra(ALARM_TIME, targetCal.getTime().toString());
-        AlarmUtils.addAlarm(getApplicationContext(), intent, notificationId,targetCal);
+        intent.putExtra(AlarmUtils.ALARM_DELAY_MILLIS, delayMillis);
+        if (!AlarmUtils.addAlarm(getApplicationContext(), intent, notificationId, targetCal)) {
+            Intent setup = new Intent(this, AlarmSetupActivity.class);
+            setup.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                startActivity(setup);
+            } catch (RuntimeException e) {
+                Log.w(TAG, "Could not open alarm setup", e);
+                handleShowToast(getString(R.string.alarm_setup_pending));
+            }
+            return;
+        }
+        handleShowToast(getResources().getString(R.string.alarm_is_set_at)
+                + " " + intent.getStringExtra(ALARM_TIME));
     }
 
     private void screenOn() {

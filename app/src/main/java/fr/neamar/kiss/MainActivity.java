@@ -119,6 +119,7 @@ import java.util.Map;
 import java.util.Set;
 
 import fi.zmengames.zen.AppGridActivity;
+import fi.zmengames.zen.AlarmUtils;
 import fi.zmengames.zen.DriveServiceHelper;
 import fi.zmengames.zen.LauncherService;
 import fi.zmengames.zen.ScreenReceiver;
@@ -1147,6 +1148,7 @@ public class MainActivity extends Activity implements QueryInterface, KeyboardSc
     @SuppressLint("CommitPrefEdits")
     protected void onResume() {
         if (BuildConfig.DEBUG) Log.i(TAG, "onResume()");
+        AlarmUtils.retryPendingAlarmsAsync(this);
         // Apps may notify badge updates for Samsung devices
         // through a ContentResolver on the url: content://com.sec.badge/apps
         if (SamsungBadgeObserver.providerExists(this)) {
