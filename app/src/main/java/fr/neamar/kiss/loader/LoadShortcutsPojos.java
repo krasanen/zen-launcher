@@ -10,12 +10,15 @@ import java.util.List;
 
 import fr.neamar.kiss.BuildConfig;
 import fr.neamar.kiss.KissApplication;
+import fr.neamar.kiss.R;
 import fr.neamar.kiss.TagsHandler;
 import fr.neamar.kiss.db.DBHelper;
 import fr.neamar.kiss.db.ShortcutRecord;
 import fr.neamar.kiss.pojo.ShortcutPojo;
 import fr.neamar.kiss.preference.DefaultLauncherPreference;
 import fr.neamar.kiss.utils.ShortcutUtil;
+
+import static fi.zmengames.zen.ZEvent.State.ACTION_SET_DEFAULT_LAUNCHER;
 
 public class LoadShortcutsPojos extends LoadPojos<ShortcutPojo> {
 
@@ -33,7 +36,7 @@ public class LoadShortcutsPojos extends LoadPojos<ShortcutPojo> {
         }
 
         TagsHandler tagsHandler = KissApplication.getApplication(context).getDataHandler().getTagsHandler();
-        List<ShortcutRecord> records = DBHelper.getShortcuts(context);
+        List<ShortcutRecord> records = includeDefaultLauncher(context, DBHelper.getShortcuts(context));
         ArrayList<ShortcutPojo> pojos = new ArrayList<>(records.size());
 
         for (ShortcutRecord shortcutRecord : records) {
@@ -48,6 +51,24 @@ public class LoadShortcutsPojos extends LoadPojos<ShortcutPojo> {
         }
 
         return pojos;
+    }
+
+    static List<ShortcutRecord> includeDefaultLauncher(Context context, List<ShortcutRecord> saved) {
+        // This built-in action must survive shortcut resets and losing HOME role.
+        // Older installs may still have a stored copy; replace it to avoid duplicates
+        // and refresh its translated name after a language change.
+        ArrayList<ShortcutRecord> records = new ArrayList<>(saved.size() + 1);
+        for (ShortcutRecord record : saved) {
+            if (!ACTION_SET_DEFAULT_LAUNCHER.toString().equals(record.intentUri)) {
+                records.add(record);
+            }
+        }
+        ShortcutRecord action = new ShortcutRecord();
+        action.name = context.getString(R.string.default_launcher_title);
+        action.packageName = "zen";
+        action.intentUri = ACTION_SET_DEFAULT_LAUNCHER.toString();
+        records.add(action);
+        return records;
     }
 
 }

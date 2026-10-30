@@ -5,15 +5,10 @@ import android.content.pm.LauncherApps;
 import android.util.Log;
 
 import fr.neamar.kiss.BuildConfig;
-import fr.neamar.kiss.DataHandler;
-import fr.neamar.kiss.KissApplication;
 import fr.neamar.kiss.MainActivity;
-import fr.neamar.kiss.R;
-import fr.neamar.kiss.db.ShortcutRecord;
 import fr.neamar.kiss.preference.DefaultLauncherPreference;
 import fr.neamar.kiss.utils.ShortcutUtil;
 
-import static fi.zmengames.zen.ZEvent.State.ACTION_SET_DEFAULT_LAUNCHER;
 
 public class OreoShortcuts extends Forwarder {
     private static final String TAG = OreoShortcuts.class.getSimpleName();
@@ -23,12 +18,8 @@ public class OreoShortcuts extends Forwarder {
 
     void onCreate() {
         // Shortcuts in Android O
-        ShortcutRecord record = new ShortcutRecord();
-        record.name = mainActivity.getString(R.string.default_launcher_title);
-        record.packageName = "zen";
-        record.intentUri = ACTION_SET_DEFAULT_LAUNCHER.toString();
-        DataHandler dataHandler = KissApplication.getApplication(mainActivity).getDataHandler();
-        dataHandler.addShortcut(record);
+        // The built-in launcher switch is supplied by LoadShortcutsPojos rather
+        // than stored here, where shortcut cleanup could immediately delete it.
         if (ShortcutUtil.areShortcutsEnabled(mainActivity)) {
 
             // On first run save all shortcuts

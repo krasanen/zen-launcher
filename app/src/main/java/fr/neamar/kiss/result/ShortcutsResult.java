@@ -90,34 +90,8 @@ public class ShortcutsResult extends Result {
         final ImageView shortcutIcon = view.findViewById(R.id.item_shortcut_icon);
         final ImageView appIcon = view.findViewById(R.id.item_app_icon);
 
-        // Retrieve package icon for this shortcut
-        final PackageManager packageManager = context.getPackageManager();
-        if (appDrawable == null){
-            try {
-                Intent intent = Intent.parseUri(shortcutPojo.intentUri, 0);
-                List<ResolveInfo> packages = packageManager.queryIntentActivities(intent, 0);
-                if (packages.size() > 0) {
-                    ResolveInfo mainPackage = packages.get(0);
-                    String packageName = mainPackage.activityInfo.applicationInfo.packageName;
-                    String activityName = mainPackage.activityInfo.name;
-                    ComponentName className = new ComponentName(packageName, activityName);
-                    appDrawable = context.getPackageManager().getActivityIcon(className);
-                } else {
-                    // Can't make sense of the intent URI (Oreo shortcut, or a shortcut from an activity that was removed from an installed app)
-                    // Retrieve app icon
-                    try {
-                        appDrawable = packageManager.getApplicationIcon(shortcutPojo.packageName);
-                    } catch (PackageManager.NameNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } catch (NameNotFoundException e) {
-                e.printStackTrace();
-                return view;
-            } catch (URISyntaxException e) {
-                e.printStackTrace();
-                return view;
-            }
+        if (appDrawable == null) {
+            appDrawable = loadAppDrawable(context);
         }
 
         if (!prefs.getBoolean("icons-hide", false)) {
@@ -146,6 +120,30 @@ public class ShortcutsResult extends Result {
         }
 
         return view;
+    }
+
+    Drawable loadAppDrawable(Context context) {
+        // Internal actions use "zen" as a synthetic package, not an installed app.
+        if (ACTION_SET_DEFAULT_LAUNCHER.toString().equals(shortcutPojo.intentUri)) {
+            return ContextCompat.getDrawable(context, R.mipmap.ic_launcher);
+        }
+        PackageManager packageManager = context.getPackageManager();
+        try {
+            Intent intent = Intent.parseUri(shortcutPojo.intentUri, 0);
+            List<ResolveInfo> packages = packageManager.queryIntentActivities(intent, 0);
+            if (!packages.isEmpty()) {
+                ResolveInfo resolved = packages.get(0);
+                ComponentName component = new ComponentName(resolved.activityInfo.packageName,
+                        resolved.activityInfo.name);
+                return packageManager.getActivityIcon(component);
+            }
+            if (!TextUtils.isEmpty(shortcutPojo.packageName)) {
+                return packageManager.getApplicationIcon(shortcutPojo.packageName);
+            }
+        } catch (NameNotFoundException | URISyntaxException e) {
+            Log.w(TAG, "Shortcut app is unavailable: " + shortcutPojo.packageName);
+        }
+        return packageManager.getDefaultActivityIcon();
     }
 
     public Drawable getDrawable(Context context) {

@@ -1,19 +1,18 @@
 package fr.neamar.kiss.preference;
 
 import android.app.Activity;
-import android.content.ComponentName;
 import android.content.Context;
+import android.content.ActivityNotFoundException;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.os.AsyncTask;
 import android.preference.DialogPreference;
+import android.provider.Settings;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.widget.Toast;
 
-import fr.neamar.kiss.DummyActivity;
 import fr.neamar.kiss.R;
 
 /**
@@ -42,7 +41,7 @@ public class DefaultLauncherPreference extends DialogPreference {
             final Intent intent = new Intent(Intent.ACTION_MAIN);
             intent.addCategory(Intent.CATEGORY_HOME);
             final ResolveInfo res = activity.getPackageManager().resolveActivity(intent, 0);
-            return res.activityInfo != null && activity.getPackageName()
+            return res != null && res.activityInfo != null && activity.getPackageName()
                     .equals(res.activityInfo.packageName);
         }
 
@@ -60,37 +59,20 @@ public class DefaultLauncherPreference extends DialogPreference {
     private static final String TAG = DefaultLauncherPreference.class.getSimpleName();
 
     public static void selectLauncher(Context context){
-        // get context (in order to avoid multiple get() calls)
-
-
-        // get packet manager
-        PackageManager packageManager = context.getPackageManager();
-        // get dummyActivity
-        ComponentName componentName = new ComponentName(context, DummyActivity.class);
-        // enable dummyActivity (it starts disabled in the manifest.xml)
-        packageManager.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_ENABLED, PackageManager.DONT_KILL_APP);
-
-        // create a new (implicit) intent with MAIN action
-        Intent intent = new Intent(Intent.ACTION_MAIN);
-        // add HOME category to it
-        intent.addCategory(Intent.CATEGORY_HOME);
-        // launch intent
-
-        try {
-            ComponentName resolverComponent = intent.resolveActivity(packageManager);
-            Log.e(TAG,"resolverComponent: "+resolverComponent);
-            Log.e(TAG,"packageName: "+resolverComponent.getPackageName());
-            if (resolverComponent.getPackageName().contains("android")) {
+        // ACTION_MAIN/CATEGORY_HOME opens the existing default launcher. Use
+        // Settings to let the user choose a home app on Pixels and other devices.
+        for (String action : new String[]{Settings.ACTION_HOME_SETTINGS,
+                Settings.ACTION_MANAGE_DEFAULT_APPS_SETTINGS, Settings.ACTION_SETTINGS}) {
+            Intent intent = new Intent(action);
+            if (!(context instanceof Activity)) intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
                 context.startActivity(intent);
-            } else {
-                Toast.makeText(context, R.string.error_setting_default, Toast.LENGTH_LONG).show();
+                return;
+            } catch (ActivityNotFoundException | SecurityException e) {
+                Log.w(TAG, "Could not open " + action, e);
             }
-            // disable dummyActivity once again
-            packageManager.setComponentEnabledSetting(componentName, PackageManager.COMPONENT_ENABLED_STATE_DISABLED, PackageManager.DONT_KILL_APP);
-        } catch (Exception e){
-            Log.e(TAG,"exception:"+e);
-            Toast.makeText(context, R.string.error_setting_default, Toast.LENGTH_LONG).show();
         }
+        Toast.makeText(context, R.string.error_setting_default, Toast.LENGTH_LONG).show();
     }
 
     @Override
