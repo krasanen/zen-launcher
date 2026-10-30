@@ -32,6 +32,8 @@ import fr.neamar.kiss.pojo.ShortcutPojo;
 public class DBHelper {
     private static final String TAG = DBHelper.class.getSimpleName();
     private static SQLiteDatabase database = null;
+    // Serialize badge writes so rapid updates cannot persist an older count last.
+    private static final ExecutorService badgeWriter = Executors.newSingleThreadExecutor();
 
     private DBHelper() {
     }
@@ -55,18 +57,25 @@ public class DBHelper {
     }
 
     public static void setBadgeCount(Context context, String packageName, Integer badgeCount) {
-        SQLiteDatabase db = getDatabase(context);
-
-        db.delete("badges", "package = ?", new String[]{packageName});
-
-        if (badgeCount > 0) {
-            ContentValues values = new ContentValues();
-            values.put("package", packageName);
-            values.put("badge_count", badgeCount);
-
-            db.insert("badges", null, values);
-        }
-
+        Context appContext = context.getApplicationContext();
+        // Broadcast receivers run on the main thread. Even a small SQLite write
+        // can block there for seconds while the filesystem syncs to storage.
+        badgeWriter.execute(() -> {
+            SQLiteDatabase db = getDatabase(appContext);
+            db.beginTransaction();
+            try {
+                db.delete("badges", "package = ?", new String[]{packageName});
+                if (badgeCount > 0) {
+                    ContentValues values = new ContentValues();
+                    values.put("package", packageName);
+                    values.put("badge_count", badgeCount);
+                    db.insertOrThrow("badges", null, values);
+                }
+                db.setTransactionSuccessful();
+            } finally {
+                db.endTransaction();
+            }
+        });
     }
     private static SQLiteDatabase getDatabase(Context context) {
         if (database == null) {
