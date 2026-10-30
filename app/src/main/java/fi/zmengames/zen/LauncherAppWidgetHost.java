@@ -25,6 +25,9 @@ import android.appwidget.AppWidgetProviderInfo;
 import android.content.Context;
 import android.util.Log;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import fr.neamar.kiss.BuildConfig;
 
 /**
@@ -34,6 +37,9 @@ import fr.neamar.kiss.BuildConfig;
  */
 public class LauncherAppWidgetHost extends AppWidgetHost {
     private static final String TAG = LauncherAppWidgetHost.class.getSimpleName();
+    private final Set<Integer> hostedWidgetIds = new HashSet<>();
+    private boolean activityStarted;
+    private boolean listening;
     public LauncherAppWidgetHost(Context context, int hostId) {
         super(context, hostId);
     }
@@ -41,13 +47,61 @@ public class LauncherAppWidgetHost extends AppWidgetHost {
     @Override
     protected AppWidgetHostView onCreateView(Context context, int appWidgetId,
                                              AppWidgetProviderInfo appWidget) {
-        return new LauncherAppWidgetHostView(context);
+        LauncherAppWidgetHostView view = new LauncherAppWidgetHostView(context);
+        hostedWidgetIds.add(appWidgetId);
+        // A widget can be added after onStart(), when we skipped listening
+        // because the launcher had no widgets yet.
+        startListeningIfNeeded();
+        return view;
+    }
+
+    @Override
+    public void startListening() {
+        activityStarted = true;
+        startListeningIfNeeded();
+    }
+
+    private void startListeningIfNeeded() {
+        // startListening performs a synchronous Binder call. Avoid it entirely
+        // on the common startup path where there are no widget views to update.
+        if (!activityStarted || hostedWidgetIds.isEmpty() || listening) {
+            return;
+        }
+        // If applying a pending update throws after registration, onStop must
+        // still unregister the host from the service.
+        listening = true;
+        startListeningToService();
+    }
+
+    protected void startListeningToService() {
+        super.startListening();
     }
 
     @Override
     public void stopListening() {
+        activityStarted = false;
+        stopListeningIfNeeded();
+    }
+
+    private void stopListeningIfNeeded() {
+        if (!listening) {
+            return;
+        }
+        stopListeningToService();
+        listening = false;
+    }
+
+    protected void stopListeningToService() {
         super.stopListening();
-        //clearViews();
+    }
+
+    @Override
+    public void deleteAppWidgetId(int appWidgetId) {
+        super.deleteAppWidgetId(appWidgetId);
+        hostedWidgetIds.remove(appWidgetId);
+        if (hostedWidgetIds.isEmpty()) {
+            stopListeningIfNeeded();
+        }
     }
     @Override
     protected void onProviderChanged(int appWidgetId, AppWidgetProviderInfo appWidget) {
